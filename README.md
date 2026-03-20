@@ -1,29 +1,75 @@
-amqp
-    和http一样，是一种传输协议
-    http是浏览器和服务器的协议
-    amqp是消息队列协议
+# 🐇 RabbitMQ 核心开发笔记
 
-性能
-    连接rabbitmq是通过tcp连接
-    同一个tcp内的生产者和消费者通过管道通信，提高性能
+### 1. 协议：AMQP
+* **定义**：Advanced Message Queuing Protocol（高级消息队列协议）。
+* **对比**：
+    * **HTTP**：浏览器与服务器之间的短连接通信协议。
+    * **AMQP**：应用服务与消息队列之间的长连接二进制协议。
 
+### 2. 性能：连接模型 (Multiplexing)
+* **物理层**：通过 **TCP** 与 RabbitMQ 服务器建立长连接（Connection）。
+* **逻辑层**：在同一个 TCP 连接内部，通过 **Channel（信道/管道）** 进行通信。
+* **核心优势**：
+    * 降低资源损耗：避免了频繁创建和销毁 TCP 连接的巨大开销。
+    * 提高并发：一个 Connection 可以支持成千上万个 Channel。
 
-连接rabbitmq
-    spring.rabbitmq.host=localhost
-    spring.rabbitmq.port=5672
-    spring.rabbitmq.username=hmall
-    spring.rabbitmq.password=yee23
-    spring.rabbitmq.virtual-host=/hmall
+---
 
-生产者
-    rabbitTemplate.convertAndSend()
-    直接给队列发送消息
-    给交换机发送消息
+### 3. Spring Boot 基础配置
+在 `application.yaml` 中配置连接信息：
 
-消费者
-    @RabbitListener(queues = "queue.name")
-    监听队列消息
+```yaml
+spring:
+  rabbitmq:
+    host: localhost           # 服务器地址
+    port: 5672                # 服务端口（AMQP默认端口）
+    username: hmall           # 用户名
+    password: yee23           # 密码
+    virtual-host: /hmall      # 虚拟主机（用于逻辑隔离，类似数据库名）
+    
+```
 
+### 4. 生产者 (Producer)
+使用 `RabbitTemplate` 发送消息，主要有两种场景：
 
+* **直连队列**：直接指定队列名发送（简单模式）。
+  ```java
+  rabbitTemplate.convertAndSend("queue.name", "hello");
 
-prefetch
+* **发给交换机**：通过交换机路由到不同队列（主流模式）。
+  ```java
+  // 参数：交换机名, 路由键, 消息内容
+  rabbitTemplate.convertAndSend("exchange.name", "routing.key", "hello");
+
+### 5. 消费者 (Consumer)
+* **使用 @RabbitListener 监听队列**。注意：类上必须加 @Component 才能被 Spring 扫描。
+
+  ```java
+
+  @Component
+  public class SimpleConsumer {
+
+      @RabbitListener(queues = "simple.queue")
+      public void testSimpleConsumer(String msg) {
+          System.out.println("消费者接收到的消息是：" + msg);
+      }
+  }
+
+### 6. 流量控制：Prefetch (预取值)
+* **背景**：默认情况下，MQ 会将队列消息全部推给消费者，可能导致消费者内存溢出（OOM）。
+
+* **作用**：控制消费者在发送 确认（Ack） 之前，能接收的消息最大上限。
+
+* **最佳实践**：设置 prefetch: 1。
+
+* **实现“能者多劳”**：处理快的线程拿得多，处理慢的拿得少，避免负载不均。
+
+* **保护机制**：确保当前消息没处理完之前，MQ 不会再给该线程推送新消息。
+
+```yaml
+spring:
+  rabbitmq:
+    listener:
+      simple:
+        prefetch: 1  # 每次拉取/预取的消息数量上限
+
