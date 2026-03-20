@@ -73,3 +73,4 @@ spring:
       simple:
         prefetch: 1  # 每次拉取/预取的消息数量上限
 
+

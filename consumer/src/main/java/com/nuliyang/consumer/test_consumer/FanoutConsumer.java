@@ -1,4 +1,4 @@
-package com.nuliyang.consumer.simple_consumer;
+package com.nuliyang.consumer.test_consumer;
 
 
 import org.springframework.amqp.rabbit.annotation.RabbitListener;

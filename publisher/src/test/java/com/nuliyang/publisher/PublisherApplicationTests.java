@@ -48,4 +48,23 @@ class PublisherApplicationTests {
         }
     }
 
+
+    @Test
+    void testDirect() {
+        String exchangeName = "direct.exchange";
+
+        //红色发给两个队列
+        String redMessage = "我要去日本，red";
+
+        //蓝色发给一个队列
+        String blueMessage = "我要去日本，blue";
+
+        rabbitTemplate.convertAndSend(exchangeName, "red", redMessage);
+        System.out.println("红色消息发送成功：" + redMessage);
+        rabbitTemplate.convertAndSend(exchangeName, "blue", blueMessage);
+        System.out.println("蓝色消息发送成功：" + blueMessage);
+
+    }
+
+
 }
