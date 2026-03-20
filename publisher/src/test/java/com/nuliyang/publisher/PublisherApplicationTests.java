@@ -66,5 +66,22 @@ class PublisherApplicationTests {
 
     }
 
+    @Test
+    void testTopic() {
+        String exchangeName = "topic.exchange";
+
+
+        String message = "我要去日本";
+        rabbitTemplate.convertAndSend(exchangeName, "japan.news", message);
+        System.out.println("日本消息发送成功：" + message);
+
+        message = "我要去中国";
+        rabbitTemplate.convertAndSend(exchangeName, "china.news", message);
+        System.out.println("中国消息发送成功：" + message);
+
+        message = "今日は天気がいいですね、散歩しましょう！";
+        rabbitTemplate.convertAndSend(exchangeName, "good.weather", message);
+        System.out.println("天气消息发送成功：" + message);
+    }
 
 }
