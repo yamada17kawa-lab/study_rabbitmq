@@ -1,4 +1,4 @@
-package com.nuliyang.consumer.test_consumer;
+package com.nuliyang.consumer.config;
 
 
 import org.springframework.amqp.core.ExchangeTypes;
