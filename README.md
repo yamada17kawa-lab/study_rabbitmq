@@ -113,4 +113,8 @@ spring:
     key = "config.2.#"
   ))
   ```
+  
+### 9. 消息转换器
+* **默认转换器**：将消息转换成字节数组，默认使用 `SimpleMessageConverter`。
+* **自定义转换器**：实现 `MessageConverter` 接口，并注册为 Spring Bean，或者将现成的转换器注册为 `@Bean`。
 
