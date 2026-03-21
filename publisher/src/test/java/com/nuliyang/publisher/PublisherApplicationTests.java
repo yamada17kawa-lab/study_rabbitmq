@@ -84,4 +84,14 @@ class PublisherApplicationTests {
         System.out.println("天气消息发送成功：" + message);
     }
 
+    @Test
+    void testRabbitMQConfig2() {
+
+        String message = "这是RabbitM配置2的消息";
+
+        String exchangeName = "config.exchange2";
+
+        rabbitTemplate.convertAndSend(exchangeName, "config.2.wangwang", message);
+    }
+
 }
