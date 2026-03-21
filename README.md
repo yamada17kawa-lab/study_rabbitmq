@@ -29,19 +29,40 @@ spring:
     
 ```
 
-### 4. 生产者 (Producer)
+### 4. 流量控制：Prefetch (预取值)
+* **背景**：默认情况下，MQ 会将队列消息全部推给消费者，可能导致消费者内存溢出（OOM）。
+
+* **作用**：控制消费者在发送 确认（Ack） 之前，能接收的消息最大上限。
+
+* **最佳实践**：设置 prefetch: 1。
+
+* **实现“能者多劳”**：处理快的线程拿得多，处理慢的拿得少，避免负载不均。
+
+* **保护机制**：确保当前消息没处理完之前，MQ 不会再给该线程推送新消息。
+
+```yaml
+spring:
+  rabbitmq:
+    listener:
+      simple:
+        prefetch: 1  # 每次拉取/预取的消息数量上限
+```
+
+### 5. 生产者 (Producer)
 使用 `RabbitTemplate` 发送消息，主要有两种场景：
 
 * **直连队列**：直接指定队列名发送（简单模式）。
   ```java
   rabbitTemplate.convertAndSend("queue.name", "hello");
+  ```
 
 * **发给交换机**：通过交换机路由到不同队列（主流模式）。
   ```java
   // 参数：交换机名, 路由键, 消息内容
   rabbitTemplate.convertAndSend("exchange.name", "routing.key", "hello");
+  ```
 
-### 5. 消费者 (Consumer)
+### 6. 消费者 (Consumer)
 * **使用 @RabbitListener 监听队列**。注意：类上必须加 @Component 才能被 Spring 扫描。
 
   ```java
@@ -54,9 +75,10 @@ spring:
           System.out.println("消费者接收到的消息是：" + msg);
       }
   }
+  ```
 
 
-### 6. 交换机路由模型
+### 7. 交换机路由模型
 交换机（Exchange）决定消息如何流转到队列，主要有三种模式：
 
 * **Fanout (广播)**：
@@ -78,22 +100,17 @@ spring:
   场景：最常用，支持灵活的分类订阅（如 china.news 和 china.weather）。  
 
 
-### 7. 流量控制：Prefetch (预取值)
-* **背景**：默认情况下，MQ 会将队列消息全部推给消费者，可能导致消费者内存溢出（OOM）。
+### 8. java中声明队列、交换机、绑定关系
+* **第一种方法**：分别注册队列、交换机、绑定关系的bean
 
-* **作用**：控制消费者在发送 确认（Ack） 之前，能接收的消息最大上限。
 
-* **最佳实践**：设置 prefetch: 1。
-
-* **实现“能者多劳”**：处理快的线程拿得多，处理慢的拿得少，避免负载不均。
-
-* **保护机制**：确保当前消息没处理完之前，MQ 不会再给该线程推送新消息。
-
-```yaml
-spring:
-  rabbitmq:
-    listener:
-      simple:
-        prefetch: 1  # 每次拉取/预取的消息数量上限
-
+* **第二种方法**：使用 @RabbitListener 注解声明。
+  
+  ```java
+  @RabbitListener(bindings = @QueueBinding(
+    value = @Queue(value = "config.queue2"),
+    exchange = @Exchange(value = "config.exchange2", type = ExchangeTypes.TOPIC),
+    key = "config.2.#"
+  ))
+  ```
 
