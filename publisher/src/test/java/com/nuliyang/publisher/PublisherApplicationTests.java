@@ -1,5 +1,7 @@
 package com.nuliyang.publisher;
 
+import com.nuliyang.publisher.entity.MessageEntity;
+import com.nuliyang.publisher.entity.People;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +26,7 @@ class PublisherApplicationTests {
 
 
     @Test
-    void testWork() throws InterruptedException {
+    void testWork() {
 
         String queueName = "work.queue";
 
@@ -92,6 +94,25 @@ class PublisherApplicationTests {
         String exchangeName = "config.exchange2";
 
         rabbitTemplate.convertAndSend(exchangeName, "config.2.wangwang", message);
+        System.out.println("RabbitM配置2的消息发送成功：" + message);
+    }
+
+    @Test
+    void testMessageConverter() {
+        People people = new People()
+                .setAge(18)
+                .setName("旺旺")
+                .setAddress("小本子县")
+                .setSex("男");
+
+        MessageEntity message = new MessageEntity()
+                .setId(100001L)
+                .setMsg("这是自定义的消息，わかってるの？")
+                .setPeople(people);
+
+        String exchangeName = "message.exchange1";
+        rabbitTemplate.convertAndSend(exchangeName, "message.1.wangwang", message);
+        System.out.println("MessageConverter消息发送成功：" + message);
     }
 
 }

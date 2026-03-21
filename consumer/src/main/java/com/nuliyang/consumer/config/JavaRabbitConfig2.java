@@ -20,4 +20,6 @@ public class JavaRabbitConfig2 {
     void testConfigConsumer2(String msg) {
         System.out.println("消费者2号收到config.queue2：" + msg);
     }
+
+
 }
