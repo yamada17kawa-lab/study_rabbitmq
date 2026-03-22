@@ -4,11 +4,16 @@ import com.nuliyang.publisher.entity.MessageEntity;
 import com.nuliyang.publisher.entity.People;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageBuilder;
+import org.springframework.amqp.core.MessageDeliveryMode;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.awt.*;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 @SpringBootTest
@@ -146,6 +151,15 @@ class PublisherApplicationTests {
         String exchangeName2 = "direct.exchange";
         rabbitTemplate.convertAndSend(exchangeName2, "nothing", message,cd);
         log.info("ReturnCallBack消息发送成功：{}", message);
+    }
+
+    @Test
+    void testLazyQueue(){
+        String message = "这是LazyQueue的消息";
+        String exchangeName = "lazy.exchange";
+
+        rabbitTemplate.convertAndSend(exchangeName, "lazy.key", message);
+        log.info("LazyQueue消息发送成功：{}", message);
     }
 
 }
