@@ -118,3 +118,44 @@ spring:
 * **默认转换器**：将消息转换成字节数组，默认使用 `SimpleMessageConverter`。
 * **自定义转换器**：实现 `MessageConverter` 接口，并注册为 Spring Bean，或者将现成的转换器注册为 `@Bean`。
 
+### 10. 生产者确认机制 (Publisher Confirms)
+
+为了保证消息可靠投递，RabbitMQ 提供了两种确认回调：
+
+#### 1. ConfirmCallback (确认回调)
+* **触发时机**：消息到达 **Exchange（交换机）** 时。
+* **结果分析**：
+  * `ack = true`：交换机已收到。
+  * `ack = false`：交换机接收失败（常见于网络抖动或 MQ 宕机）。
+
+#### 2. ReturnsCallback (退回回调)
+* **触发时机**：消息已达交换机，但 **无法路由到指定的 Queue** 时。
+* **原因分析**：通常是 `RoutingKey` 写错，或者队列未绑定到该交换机。
+
+#### 关键配置：
+```java
+@Configuration
+public class MQConfig {
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    @PostConstruct
+    public void init() {
+        // 设置确认回调
+        
+        rabbitTemplate.setConfirmCallback((correlationData, ack, cause) -> {
+            if (!ack) {
+                log.error("消息发送到交换机失败！原因：{}", cause);
+                // 这里可以写重试逻辑
+            }
+        });
+
+        // 设置退回回调
+        rabbitTemplate.setReturnsCallback(returned -> {
+            log.error("消息路由到队列失败！应答码：{}, 原因：{}, 交换机：{}, 路由键：{}",
+                    returned.getReplyCode(), returned.getReplyText(), 
+                    returned.getExchange(), returned.getRoutingKey());
+        });
+    }
+}
+```

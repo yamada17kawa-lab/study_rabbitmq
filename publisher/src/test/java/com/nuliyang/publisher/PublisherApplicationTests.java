@@ -2,12 +2,17 @@ package com.nuliyang.publisher;
 
 import com.nuliyang.publisher.entity.MessageEntity;
 import com.nuliyang.publisher.entity.People;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.UUID;
+
 @SpringBootTest
+@Slf4j(topic = "PublisherApplicationTests")
 class PublisherApplicationTests {
 
     @Autowired
@@ -21,7 +26,7 @@ class PublisherApplicationTests {
 
 
         rabbitTemplate.convertAndSend(queueName, message);
-        System.out.println("消息发送成功：" + message);
+        log.info("消息发送成功：{}", message);
     }
 
 
@@ -34,7 +39,7 @@ class PublisherApplicationTests {
             int count = i+1;
             String message = "第" + count + "次来日本";
             rabbitTemplate.convertAndSend(queueName, message);
-            System.out.println("消息发送成功：" + message);
+            log.info("消息发送成功：{}", message);
         }
     }
 
@@ -46,7 +51,7 @@ class PublisherApplicationTests {
             int count = i+1;
             String message = "第" + count + "次来日本";
             rabbitTemplate.convertAndSend(exchangeName, "", message);
-            System.out.println("消息发送成功：" + message);
+            log.info("消息发送成功：{}", message);
         }
     }
 
@@ -62,9 +67,9 @@ class PublisherApplicationTests {
         String blueMessage = "我要去日本，blue";
 
         rabbitTemplate.convertAndSend(exchangeName, "red", redMessage);
-        System.out.println("红色消息发送成功：" + redMessage);
+        log.info("红色消息发送成功：{}", redMessage);
         rabbitTemplate.convertAndSend(exchangeName, "blue", blueMessage);
-        System.out.println("蓝色消息发送成功：" + blueMessage);
+        log.info("蓝色消息发送成功：{}", blueMessage);
 
     }
 
@@ -75,15 +80,15 @@ class PublisherApplicationTests {
 
         String message = "我要去日本";
         rabbitTemplate.convertAndSend(exchangeName, "japan.news", message);
-        System.out.println("日本消息发送成功：" + message);
+        log.info("日本消息发送成功：{}", message);
 
         message = "我要去中国";
         rabbitTemplate.convertAndSend(exchangeName, "china.news", message);
-        System.out.println("中国消息发送成功：" + message);
+        log.info("中国消息发送成功：{}", message);
 
         message = "今日は天気がいいですね、散歩しましょう！";
         rabbitTemplate.convertAndSend(exchangeName, "good.weather", message);
-        System.out.println("天气消息发送成功：" + message);
+        log.info("天气消息发送成功：{}", message);
     }
 
     @Test
@@ -94,7 +99,7 @@ class PublisherApplicationTests {
         String exchangeName = "config.exchange2";
 
         rabbitTemplate.convertAndSend(exchangeName, "config.2.wangwang", message);
-        System.out.println("RabbitM配置2的消息发送成功：" + message);
+        log.info("RabbitM配置2的消息发送成功：{}", message);
     }
 
     @Test
@@ -112,7 +117,35 @@ class PublisherApplicationTests {
 
         String exchangeName = "message.exchange1";
         rabbitTemplate.convertAndSend(exchangeName, "message.1.wangwang", message);
-        System.out.println("MessageConverter消息发送成功：" + message);
+        log.info("MessageConverter消息发送成功：{}", message);
+    }
+
+    @Test
+    void testConfirmCallback(){
+        String message = "这是ConfirmCallBack的消息";
+
+        CorrelationData cd = new CorrelationData(UUID.randomUUID().toString());
+
+
+        String exchangeName = "confirm.exchange";
+        rabbitTemplate.convertAndSend(exchangeName, "confirm.wangwang", message,cd);
+        log.info("ConfirmCallBack消息发送成功：{}", message);
+
+
+
+    }
+
+    @Test
+    void testReturnCallback(){
+        String message = "这是ReturnCallBack的消息";
+
+        CorrelationData cd = new CorrelationData(UUID.randomUUID().toString());
+
+
+
+        String exchangeName2 = "direct.exchange";
+        rabbitTemplate.convertAndSend(exchangeName2, "nothing", message,cd);
+        log.info("ReturnCallBack消息发送成功：{}", message);
     }
 
 }
